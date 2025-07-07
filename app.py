@@ -172,6 +172,9 @@ async def search_image_post(query: str = Form(...)):
         <h2>Search results for: "{query}"</h2>
         <img src="{blob_url}" alt="Search Result Image" style="max-width:512px;"/>
         <br/><br/>
+        <a href="{blob_url}" download="{blob_name}">
+        <button>Download Image</button>
+        </a>
         <a href="/search-image">Search again</a><br/>
         <a href="/">Back to Text Q&A</a><br/>
         <a href="/generate-image">Go to Image Generation</a>
