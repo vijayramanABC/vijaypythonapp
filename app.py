@@ -179,8 +179,8 @@ async def search_image_post(query: str = Form(...)):
         <a href="{blob_url}" download="{blob_name}">
         <button>Download Image</button>
         </a>
-        <a href="/download/jpeg/{{ blob_name }}" download><button>Download JPEG</button></a>
-        <a href="/download/tiff/{{ blob_name }}" download><button>Download TIFF</button></a>
+        <a href="/download/jpeg/{blob_name}" download><button>Download JPEG</button></a>
+        <a href="/download/tiff/{blob_name}" download><button>Download TIFF</button></a>
         <a href="/search-image">Search again</a><br/>
         <a href="/">Back to Text Q&A</a><br/>
         <a href="/generate-image">Go to Image Generation</a>
