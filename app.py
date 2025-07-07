@@ -218,6 +218,7 @@ async def download_tiff(blob_name: str):
     # blob_name example: "image1.jpg"
     # We fetch the JPEG and convert to TIFF on the fly
 
+    print("Inside TIFF")
     blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
     sas_token = generate_blob_sas(
         account_name=blob_service_client.account_name,
