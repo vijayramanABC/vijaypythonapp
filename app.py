@@ -167,14 +167,27 @@ async def search_image_post(query: str = Form(...)):
     )
     blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{BLOB_CONTAINER_NAME}/{blob_name}?{sas_token}"
 
+    # Original image URL (e.g. JPEG)
+    jpeg_url = get_sas_url(blob_name)
+
+    # Derive TIFF and AI blob names by replacing extensions
+    base_name = blob_name.rsplit(".", 1)[0]  # e.g. "image1"
+    tiff_blob_name = base_name + ".tiff"
+    ai_blob_name = base_name + ".ai"
+
+    # Generate SAS URLs for TIFF and AI images (you can check existence separately if you want)
+    tiff_url = get_sas_url(tiff_blob_name)
+    ai_url = get_sas_url(ai_blob_name)
+
     return f"""
     <html><body>
         <h2>Search results for: "{query}"</h2>
-        <img src="{blob_url}" alt="Search Result Image" style="max-width:512px;"/>
+        <img src="{jpeg_url}" alt="Search Result Image" style="max-width:512px;"/>
         <br/><br/>
-        <a href="{blob_url}" download="{blob_name}">
-        <button>Download Image</button>
-        </a>
+        <a href="{jpeg_url}" download="{blob_name}"><button>Download JPEG</button></a>
+        <a href="{tiff_url}" download="{tiff_blob_name}"><button>Download TIFF</button></a>
+        <a href="{ai_url}" download="{ai_blob_name}"><button>Download AI</button></a>
+        <br/><br/>
         <a href="/search-image">Search again</a><br/>
         <a href="/">Back to Text Q&A</a><br/>
         <a href="/generate-image">Go to Image Generation</a>
