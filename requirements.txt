@@ -5,3 +5,5 @@ openai
 python-multipart
 azure-search-documents
 azure-storage-blob
+pillow
+httpx
