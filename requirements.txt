@@ -3,3 +3,5 @@ fastapi==0.100.0
 uvicorn==0.23.1
 openai
 python-multipart
+azure-search-documents==11.8.0
+azure-storage-blob==12.17.0
