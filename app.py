@@ -95,7 +95,7 @@ async def generate_image_form():
 async def generate_image_post(prompt: str = Form(...)):
     client = AzureOpenAI(
         azure_endpoint="https://vijay-mcswd6jl-australiaeast.cognitiveservices.azure.com/openai/deployments/dall-e-3/images/generations?api-version=2024-02-01/",
-        api_key=OPENAI_API_KEY,
+        api_key="8yz1IMGzHFZaAXZNNPx4FS7AyTm4cQJypzBBxKZCcOjXuwPmy6vYJQQJ99BGACL93NaXJ3w3AAAAACOGZHAw",
         api_version=OPENAI_API_VERSION,
     )
     response = client.images.generate(
