@@ -91,7 +91,7 @@ async def generate_image(prompt: str = Form(...)):
     response = client.images.generate(
         model="dall-e-3",
         prompt=prompt,
-        size="512x512",
+        size="1024x1024",
         n=1
     )
     image_url = response.data[0].url
@@ -100,7 +100,7 @@ async def generate_image(prompt: str = Form(...)):
     <html>
         <body>
             <h2>Generated Image for: "{prompt}"</h2>
-            <img src="{image_url}" alt="Generated Image" style="max-width:512px;"/>
+            <img src="{image_url}" alt="Generated Image" style="max-width:1024px;"/>
             <br/><br/>
             <a href="/generate-image">Generate another image</a><br/>
             <a href="/">Back to Text Q&A</a>
