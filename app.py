@@ -6,6 +6,10 @@ from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
 from datetime import datetime, timedelta
+from fastapi.responses import StreamingResponse
+from io import BytesIO
+from PIL import Image
+import httpx
 
 app = FastAPI()
 
@@ -167,29 +171,77 @@ async def search_image_post(query: str = Form(...)):
     )
     blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{BLOB_CONTAINER_NAME}/{blob_name}?{sas_token}"
 
-    # Original image URL (e.g. JPEG)
-    jpeg_url = get_sas_url(blob_name)
-
-    # Derive TIFF and AI blob names by replacing extensions
-    base_name = blob_name.rsplit(".", 1)[0]  # e.g. "image1"
-    tiff_blob_name = base_name + ".tiff"
-    ai_blob_name = base_name + ".ai"
-
-    # Generate SAS URLs for TIFF and AI images (you can check existence separately if you want)
-    tiff_url = get_sas_url(tiff_blob_name)
-    ai_url = get_sas_url(ai_blob_name)
-
     return f"""
     <html><body>
         <h2>Search results for: "{query}"</h2>
-        <img src="{jpeg_url}" alt="Search Result Image" style="max-width:512px;"/>
+        <img src="{blob_url}" alt="Search Result Image" style="max-width:512px;"/>
         <br/><br/>
-        <a href="{jpeg_url}" download="{blob_name}"><button>Download JPEG</button></a>
-        <a href="{tiff_url}" download="{tiff_blob_name}"><button>Download TIFF</button></a>
-        <a href="{ai_url}" download="{ai_blob_name}"><button>Download AI</button></a>
-        <br/><br/>
+        <a href="{blob_url}" download="{blob_name}">
+        <button>Download Image</button>
+        </a>
+        <a href="/download/jpeg/{{ blob_name }}" download><button>Download JPEG</button></a>
+        <a href="/download/tiff/{{ blob_name }}" download><button>Download TIFF</button></a>
         <a href="/search-image">Search again</a><br/>
         <a href="/">Back to Text Q&A</a><br/>
         <a href="/generate-image">Go to Image Generation</a>
     </body></html>
     """
+
+
+
+
+@app.get("/download/jpeg/{blob_name}")
+async def download_jpeg(blob_name: str):
+    blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
+    sas_token = generate_blob_sas(
+        account_name=blob_service_client.account_name,
+        container_name=BLOB_CONTAINER_NAME,
+        blob_name=blob_name,
+        account_key=blob_service_client.credential.account_key,
+        permission=BlobSasPermissions(read=True),
+        expiry=datetime.utcnow() + timedelta(hours=1),
+    )
+    blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{BLOB_CONTAINER_NAME}/{blob_name}?{sas_token}"
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(blob_url)
+        response.raise_for_status()
+        jpeg_bytes = response.content
+
+    return StreamingResponse(BytesIO(jpeg_bytes), media_type="image/jpeg", headers={
+        "Content-Disposition": f"attachment; filename={blob_name}"
+    })
+
+
+@app.get("/download/tiff/{blob_name}")
+async def download_tiff(blob_name: str):
+    # blob_name example: "image1.jpg"
+    # We fetch the JPEG and convert to TIFF on the fly
+
+    blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
+    sas_token = generate_blob_sas(
+        account_name=blob_service_client.account_name,
+        container_name=BLOB_CONTAINER_NAME,
+        blob_name=blob_name,
+        account_key=blob_service_client.credential.account_key,
+        permission=BlobSasPermissions(read=True),
+        expiry=datetime.utcnow() + timedelta(hours=1),
+    )
+    blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{BLOB_CONTAINER_NAME}/{blob_name}?{sas_token}"
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(blob_url)
+        response.raise_for_status()
+        jpeg_bytes = response.content
+
+    # Convert JPEG bytes to TIFF in-memory
+    img = Image.open(BytesIO(jpeg_bytes))
+    tiff_bytes_io = BytesIO()
+    img.save(tiff_bytes_io, format="TIFF")
+    tiff_bytes_io.seek(0)
+
+    tiff_filename = blob_name.rsplit(".", 1)[0] + ".tiff"
+
+    return StreamingResponse(tiff_bytes_io, media_type="image/tiff", headers={
+        "Content-Disposition": f"attachment; filename={tiff_filename}"
+    })
