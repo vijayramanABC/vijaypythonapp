@@ -136,8 +136,6 @@ async def generate_image_post(prompt: str = Form(...)):
 # Image search page using Azure Search + Blob SAS URL
 @app.get("/search-image", response_class=HTMLResponse)
 async def search_image_form():
-    return @app.get("/search-image", response_class=HTMLResponse)
-async def search_image_form():
     return """
     <html>
     <head>
