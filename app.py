@@ -181,7 +181,7 @@ async def search_image_post(query: str = Form(...)):
         print("*****************************")
         print(image_url)
         print("*****************************")
-        blob_name = image_url.split("/")[-1].split("?")[0]  # extract blob name from URL
+        #blob_name = image_url.split("/")[-1].split("?")[0]  # extract blob name from URL
         break
 
     if not image_url:
