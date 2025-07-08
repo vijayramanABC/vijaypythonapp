@@ -164,76 +164,52 @@ async def search_image_form():
 
 @app.post("/search-image", response_class=HTMLResponse)
 async def search_image_post(query: str = Form(...)):
+    # Search the AI search index using caption field
     search_client = SearchClient(
         endpoint=SEARCH_ENDPOINT,
         index_name=SEARCH_INDEX_NAME,
         credential=AzureKeyCredential(SEARCH_API_KEY),
     )
+
     results = search_client.search(search_text=query, top=1)
 
+    image_url = None
     blob_name = None
+
     for r in results:
-        blob_name = r.get("document_title")  # <-- Update if your field name differs
+        image_url = r.get("image_url")
+        blob_name = image_url.split("/")[-1].split("?")[0]  # extract blob name from URL
         break
 
-    if not blob_name:
+    if not image_url:
         return f"""
-        <html>
-        <head>
-            <title>No Results</title>
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        </head>
-        <body class="bg-light">
-            <div class="container mt-5">
-                <div class="alert alert-warning text-center shadow" role="alert">
-                    <h4>No results found for &quot;{query}&quot;</h4>
-                </div>
-                <div class="d-flex justify-content-center gap-3">
-                    <a href="/search-image" class="btn btn-primary">Try Again</a>
-                    <a href="/" class="btn btn-outline-secondary">Back to Text Q&A</a>
-                    <a href="/generate-image" class="btn btn-outline-secondary">Image Generation</a>
-                </div>
-            </div>
-        </body>
-        </html>
+        <html><body>
+            <h2>No results found for "{query}"</h2>
+            <a href="/search-image">Try again</a><br/>
+            <a href="/">Back to Text Q&A</a><br/>
+            <a href="/generate-image">Go to Image Generation</a>
+        </body></html>
         """
-
-    blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
-    sas_token = generate_blob_sas(
-        account_name=blob_service_client.account_name,
-        container_name=BLOB_CONTAINER_NAME,
-        blob_name=blob_name,
-        account_key=blob_service_client.credential.account_key,
-        permission=BlobSasPermissions(read=True),
-        expiry=datetime.utcnow() + timedelta(hours=1),
-    )
-    blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{BLOB_CONTAINER_NAME}/{blob_name}?{sas_token}"
 
     return f"""
     <html>
-    <head>
-        <title>Search Results</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
-    <body class="bg-light">
-        <div class="container my-5">
-            <div class="card shadow">
-                <div class="card-body text-center">
-                    <h3 class="card-title mb-4">Search results for: <em>"{query}"</em></h3>
-                    <img src="{blob_url}" alt="Search Result Image" class="img-fluid rounded mb-4" style="max-height:400px;" />
-                    <div class="d-flex flex-wrap justify-content-center gap-3 mb-3">
-                        <a href="{blob_url}" download="{blob_name}" class="btn btn-primary">Download Original</a>
-                        <a href="/download/jpeg/{blob_name}" download class="btn btn-success">Download JPEG</a>
-                        <a href="/download/tiff/{blob_name}" download class="btn btn-info text-white">Download TIFF</a>
-                    </div>
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="/search-image" class="btn btn-outline-secondary">Search Again</a>
-                        <a href="/" class="btn btn-outline-secondary">Back to Text Q&A</a>
-                        <a href="/generate-image" class="btn btn-outline-secondary">Image Generation</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <body style="font-family: Arial; padding: 20px;">
+        <h2>Search results for: "{query}"</h2>
+        <img src="{image_url}" alt="Search Result Image" style="max-width:512px; border: 1px solid #ccc;"/>
+        <br/><br/>
+        <a href="{image_url}" download="{blob_name}">
+            <button style="margin-right:10px;">Download Image</button>
+        </a>
+        <a href="/download/jpeg/{blob_name}">
+            <button style="margin-right:10px;">Download JPEG</button>
+        </a>
+        <a href="/download/tiff/{blob_name}">
+            <button>Download TIFF</button>
+        </a>
+        <br/><br/>
+        <a href="/search-image">Search again</a><br/>
+        <a href="/">Back to Text Q&A</a><br/>
+        <a href="/generate-image">Go to Image Generation</a>
     </body>
     </html>
     """
