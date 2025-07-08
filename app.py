@@ -187,7 +187,7 @@ async def search_image_post(query: str = Form(...)):
     if not image_url:
         return f"""
         <html><body>
-            <h2>No results found for "{query}"</h2>
+            <h2>No results found for*** "{image_url}"</h2>
             <a href="/search-image">Try again</a><br/>
             <a href="/">Back to Text Q&A</a><br/>
             <a href="/generate-image">Go to Image Generation</a>
