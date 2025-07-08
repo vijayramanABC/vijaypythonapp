@@ -136,18 +136,34 @@ async def generate_image_post(prompt: str = Form(...)):
 # Image search page using Azure Search + Blob SAS URL
 @app.get("/search-image", response_class=HTMLResponse)
 async def search_image_form():
+    return @app.get("/search-image", response_class=HTMLResponse)
+async def search_image_form():
     return """
-    <html><body>
-        <h2>Search for an Image</h2>
-        <form action="/search-image" method="post">
-            <input type="text" name="query" placeholder="Enter search text" style="width:1024px;" required />
-            <button type="submit">Search</button>
-        </form>
-        <br/>
-        <a href="/">Back to Text Q&A</a><br/>
-        <a href="/generate-image">Go to Image Generation</a>
-    </body></html>
+    <html>
+    <head>
+        <title>Image Search</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-light">
+        <div class="container mt-5">
+            <div class="card p-4 shadow">
+                <h2>Search for an Image</h2>
+                <form action="/search-image" method="post">
+                    <div class="input-group mb-3">
+                        <input type="text" name="query" class="form-control" placeholder="Enter search text..." required />
+                        <button class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                </form>
+                <div class="d-flex gap-3">
+                    <a href="/" class="btn btn-outline-secondary">Back to Q&A</a>
+                    <a href="/generate-image" class="btn btn-outline-secondary">Image Generation</a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
     """
+
 
 @app.post("/search-image", response_class=HTMLResponse)
 async def search_image_post(query: str = Form(...)):
