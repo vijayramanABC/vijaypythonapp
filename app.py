@@ -36,16 +36,29 @@ BLOB_CONTAINER_NAME = "vijayimagecontainer"
 @app.get("/", response_class=HTMLResponse)
 async def text_qa_form():
     return """
-    <html><body>
-        <h2>Text Q&A with OpenAI</h2>
-        <form action="/" method="post">
-            <input type="text" name="question" placeholder="Ask something..." style="width:400px;" required />
-            <button type="submit">Ask</button>
-        </form>
-        <br/>
-        <a href="/generate-image">Go to Image Generation</a><br/>
-        <a href="/search-image">Go to Image Search</a>
-    </body></html>
+    <html>
+    <head>
+        <title>Text Q&A</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-light">
+        <div class="container mt-5">
+            <div class="card p-4 shadow">
+                <h2 class="mb-3">Text Q&A with OpenAI</h2>
+                <form action="/" method="post" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" name="question" class="form-control" placeholder="Ask something..." required />
+                        <button class="btn btn-primary" type="submit">Ask</button>
+                    </div>
+                </form>
+                <div class="d-flex gap-3">
+                    <a href="/generate-image" class="btn btn-outline-secondary">Image Generation</a>
+                    <a href="/search-image" class="btn btn-outline-secondary">Image Search</a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
     """
 
 @app.post("/", response_class=HTMLResponse)
