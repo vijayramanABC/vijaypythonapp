@@ -162,7 +162,6 @@ async def search_image_form():
     </html>
     """
 
-
 @app.post("/search-image", response_class=HTMLResponse)
 async def search_image_post(query: str = Form(...)):
     search_client = SearchClient(
@@ -179,12 +178,24 @@ async def search_image_post(query: str = Form(...)):
 
     if not blob_name:
         return f"""
-        <html><body>
-            <h2>No results found for "{query}"</h2>
-            <a href="/search-image">Try again</a><br/>
-            <a href="/">Back to Text Q&A</a><br/>
-            <a href="/generate-image">Go to Image Generation</a>
-        </body></html>
+        <html>
+        <head>
+            <title>No Results</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        </head>
+        <body class="bg-light">
+            <div class="container mt-5">
+                <div class="alert alert-warning text-center shadow" role="alert">
+                    <h4>No results found for &quot;{query}&quot;</h4>
+                </div>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="/search-image" class="btn btn-primary">Try Again</a>
+                    <a href="/" class="btn btn-outline-secondary">Back to Text Q&A</a>
+                    <a href="/generate-image" class="btn btn-outline-secondary">Image Generation</a>
+                </div>
+            </div>
+        </body>
+        </html>
         """
 
     blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
@@ -199,21 +210,33 @@ async def search_image_post(query: str = Form(...)):
     blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{BLOB_CONTAINER_NAME}/{blob_name}?{sas_token}"
 
     return f"""
-    <html><body>
-        <h2>Search results for: "{query}"</h2>
-        <img src="{blob_url}" alt="Search Result Image" style="max-width:512px;"/>
-        <br/><br/>
-        <a href="{blob_url}" download="{blob_name}">
-        <button>Download Image</button>
-        </a>
-        <a href="/download/jpeg/{blob_name}" download><button>Download JPEG</button></a>
-        <a href="/download/tiff/{blob_name}" download><button>Download TIFF</button></a>
-        <a href="/search-image">Search again</a><br/>
-        <a href="/">Back to Text Q&A</a><br/>
-        <a href="/generate-image">Go to Image Generation</a>
-    </body></html>
+    <html>
+    <head>
+        <title>Search Results</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-light">
+        <div class="container my-5">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <h3 class="card-title mb-4">Search results for: <em>"{query}"</em></h3>
+                    <img src="{blob_url}" alt="Search Result Image" class="img-fluid rounded mb-4" style="max-height:400px;" />
+                    <div class="d-flex flex-wrap justify-content-center gap-3 mb-3">
+                        <a href="{blob_url}" download="{blob_name}" class="btn btn-primary">Download Original</a>
+                        <a href="/download/jpeg/{blob_name}" download class="btn btn-success">Download JPEG</a>
+                        <a href="/download/tiff/{blob_name}" download class="btn btn-info text-white">Download TIFF</a>
+                    </div>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="/search-image" class="btn btn-outline-secondary">Search Again</a>
+                        <a href="/" class="btn btn-outline-secondary">Back to Text Q&A</a>
+                        <a href="/generate-image" class="btn btn-outline-secondary">Image Generation</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
     """
-
 
 
 
