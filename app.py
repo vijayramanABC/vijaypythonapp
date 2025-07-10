@@ -205,29 +205,47 @@ async def search_image_post(query: str = Form(...)):
     )
     blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{BLOB_CONTAINER_NAME}/{blob_name}?{sas_token}"
     
- return f"""
-    <html>
-    <body style="font-family: Arial; padding: 20px;">
-        <h2>Search results for: "{query}"</h2>
-        <img src="{blob_url}" alt="Search Result Image" style="max-width:512px; border: 1px solid #ccc;"/>
-        <br/><br/>
-        <a href="{blob_url}" download="{blob_name}">
-            <button style="margin-right:10px;">Download Image</button>
-        </a>
-        <a href="/download/jpeg/{blob_name}">
-            <button style="margin-right:10px;">Download JPEG</button>
-        </a>
-        <a href="/download/tiff/{blob_name}">
-            <button>Download TIFF</button>
-        </a>
-        <br/><br/>
-        <a href="/search-image">Search again</a><br/>
-        <a href="/">Back to Text Q&A</a><br/>
-        <a href="/generate-image">Go to Image Generation</a>
-    </body>
-    </html>
-    """
+    return f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Search Result</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
 
+<div class="container py-5">
+    <div class="text-center mb-4">
+        <h2 class="mb-3">Search Results for: <em>{query}</em></h2>
+    </div>
+
+    <div class="card shadow-sm p-4">
+        <img src="{blob_url}" alt="Search Result Image" class="img-fluid rounded mb-4 mx-auto d-block" style="max-height: 500px; object-fit: contain;" />
+
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{blob_url}" download="{blob_name}" class="btn btn-primary">
+                Download Image
+            </a>
+            <a href="/download/jpeg/{blob_name}" class="btn btn-secondary">
+                Download JPEG
+            </a>
+            <a href="/download/tiff/{blob_name}" class="btn btn-secondary">
+                Download TIFF
+            </a>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="/search-image" class="btn btn-outline-primary me-2">Search Again</a>
+        <a href="/" class="btn btn-outline-secondary me-2">Back to Text Q&A</a>
+        <a href="/generate-image" class="btn btn-outline-success">Go to Image Generation</a>
+    </div>
+</div>
+
+</body>
+</html>
+"""
 
 
 
