@@ -23,7 +23,7 @@ OPENAI_API_VERSION = "2025-01-01-preview"
 # Azure Search
 SEARCH_ENDPOINT = "https://vijayaisearch.search.windows.net"
 SEARCH_API_KEY = "Uu7vNqo3rOmsInCMiNzQKUgJF4UAVqZpfT5quZQ8qbAzSeBh2CGX"
-SEARCH_INDEX_NAME = "captionindex"
+SEARCH_INDEX_NAME = "multimodal-rag-1751364945777"
 
 # Azure Blob Storage
 BLOB_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=vijayaistorage;AccountKey=hIZGQYe02nk9dOwfbU6iLdAV8Jq7WqJ/eyXohtcuc6036GhKEW5qwoQKOSFRY6FsyobWDjE+fCtR+AStgKVSzg==;EndpointSuffix=core.windows.net"
@@ -36,29 +36,16 @@ BLOB_CONTAINER_NAME = "vijayimagecontainer"
 @app.get("/", response_class=HTMLResponse)
 async def text_qa_form():
     return """
-    <html>
-    <head>
-        <title>Text Q&A</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
-    <body class="bg-light">
-        <div class="container mt-5">
-            <div class="card p-4 shadow">
-                <h2 class="mb-3">Text Q&A with OpenAI</h2>
-                <form action="/" method="post" class="mb-3">
-                    <div class="input-group">
-                        <input type="text" name="question" class="form-control" placeholder="Ask something..." required />
-                        <button class="btn btn-primary" type="submit">Ask</button>
-                    </div>
-                </form>
-                <div class="d-flex gap-3">
-                    <a href="/generate-image" class="btn btn-outline-secondary">Image Generation</a>
-                    <a href="/search-image" class="btn btn-outline-secondary">Image Search</a>
-                </div>
-            </div>
-        </div>
-    </body>
-    </html>
+    <html><body>
+        <h2>Text Q&A with OpenAI</h2>
+        <form action="/" method="post">
+            <input type="text" name="question" placeholder="Ask something..." style="width:400px;" required />
+            <button type="submit">Ask</button>
+        </form>
+        <br/>
+        <a href="/generate-image">Go to Image Generation</a><br/>
+        <a href="/search-image">Go to Image Search</a>
+    </body></html>
     """
 
 @app.post("/", response_class=HTMLResponse)
@@ -137,92 +124,75 @@ async def generate_image_post(prompt: str = Form(...)):
 @app.get("/search-image", response_class=HTMLResponse)
 async def search_image_form():
     return """
-    <html>
-    <head>
-        <title>Image Search</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
-    <body class="bg-light">
-        <div class="container mt-5">
-            <div class="card p-4 shadow">
-                <h2>Search for an Image</h2>
-                <form action="/search-image" method="post">
-                    <div class="input-group mb-3">
-                        <input type="text" name="query" class="form-control" placeholder="Enter search text..." required />
-                        <button class="btn btn-primary" type="submit">Search</button>
-                    </div>
-                </form>
-                <div class="d-flex gap-3">
-                    <a href="/" class="btn btn-outline-secondary">Back to Q&A</a>
-                    <a href="/generate-image" class="btn btn-outline-secondary">Image Generation</a>
-                </div>
-            </div>
-        </div>
-    </body>
-    </html>
+    <html><body>
+        <h2>Search for an Image</h2>
+        <form action="/search-image" method="post">
+            <input type="text" name="query" placeholder="Enter search text" style="width:1024px;" required />
+            <button type="submit">Search</button>
+        </form>
+        <br/>
+        <a href="/">Back to Text Q&A</a><br/>
+        <a href="/generate-image">Go to Image Generation</a>
+    </body></html>
     """
 
 @app.post("/search-image", response_class=HTMLResponse)
 async def search_image_post(query: str = Form(...)):
-    # Search the AI search index using caption field
     search_client = SearchClient(
         endpoint=SEARCH_ENDPOINT,
         index_name=SEARCH_INDEX_NAME,
         credential=AzureKeyCredential(SEARCH_API_KEY),
     )
-
     results = search_client.search(search_text=query, top=1)
 
-    image_url = None
     blob_name = None
-
     for r in results:
-        image_url = r.get("image_url")
-        print("*****************************")
-        print(r)
-        print("*****************************")
-        blob_name = image_url.split("/")[-1].split("?")[0]  # extract blob name from URL
+        blob_name = r.get("document_title")  # <-- Update if your field name differs
         break
 
-    if not image_url:
+    if not blob_name:
         return f"""
         <html><body>
-            <h2>No results found for*** "{image_url}"</h2>
+            <h2>No results found for "{query}"</h2>
             <a href="/search-image">Try again</a><br/>
             <a href="/">Back to Text Q&A</a><br/>
             <a href="/generate-image">Go to Image Generation</a>
         </body></html>
         """
 
+    blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
+    sas_token = generate_blob_sas(
+        account_name=blob_service_client.account_name,
+        container_name=BLOB_CONTAINER_NAME,
+        blob_name=blob_name,
+        account_key=blob_service_client.credential.account_key,
+        permission=BlobSasPermissions(read=True),
+        expiry=datetime.utcnow() + timedelta(hours=1),
+    )
+    blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{BLOB_CONTAINER_NAME}/{blob_name}?{sas_token}"
+
     return f"""
-    <html>
-    <body style="font-family: Arial; padding: 20px;">
+    <html><body>
         <h2>Search results for: "{query}"</h2>
-        <img src="{image_url}" alt="Search Result Image" style="max-width:512px; border: 1px solid #ccc;"/>
+        <img src="{blob_url}" alt="Search Result Image" style="max-width:512px;"/>
         <br/><br/>
-        <a href="{image_url}" download="{blob_name}">
-            <button style="margin-right:10px;">Download Image</button>
+        <a href="{blob_url}" download="{blob_name}">
+        <button>Download Image</button>
         </a>
-        <a href="/download/jpeg/{blob_name}">
-            <button style="margin-right:10px;">Download JPEG</button>
-        </a>
-        <a href="/download/tiff/{blob_name}">
-            <button>Download TIFF</button>
-        </a>
-        <br/><br/>
+        <a href="/download/jpeg/{blob_name}" download><button>Download JPEG</button></a>
+        <a href="/download/tiff/{blob_name}" download><button>Download TIFF</button></a>
         <a href="/search-image">Search again</a><br/>
         <a href="/">Back to Text Q&A</a><br/>
         <a href="/generate-image">Go to Image Generation</a>
-    </body>
-    </html>
+    </body></html>
     """
+
 
 
 
 @app.get("/download/jpeg/{blob_name}")
 async def download_jpeg(blob_name: str):
     blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
-    print("BLOB NAME:::  " & blob_name)
     sas_token = generate_blob_sas(
         account_name=blob_service_client.account_name,
         container_name=BLOB_CONTAINER_NAME,
