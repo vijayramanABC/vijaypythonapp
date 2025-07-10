@@ -222,6 +222,7 @@ async def search_image_post(query: str = Form(...)):
 @app.get("/download/jpeg/{blob_name}")
 async def download_jpeg(blob_name: str):
     blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
+    print("BLOB NAME:::  " & blob_name)
     sas_token = generate_blob_sas(
         account_name=blob_service_client.account_name,
         container_name=BLOB_CONTAINER_NAME,
