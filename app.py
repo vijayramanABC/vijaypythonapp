@@ -205,7 +205,7 @@ async def search_image_post(query: str = Form(...)):
     )
     blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{BLOB_CONTAINER_NAME}/{blob_name}?{sas_token}"
     
-    return f"""
+ return f"""
     <html>
     <body style="font-family: Arial; padding: 20px;">
         <h2>Search results for: "{query}"</h2>
@@ -227,6 +227,7 @@ async def search_image_post(query: str = Form(...)):
     </body>
     </html>
     """
+
 
 
 
