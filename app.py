@@ -23,7 +23,7 @@ OPENAI_API_VERSION = "2025-01-01-preview"
 # Azure Search
 SEARCH_ENDPOINT = "https://vijayaisearch.search.windows.net"
 SEARCH_API_KEY = "Uu7vNqo3rOmsInCMiNzQKUgJF4UAVqZpfT5quZQ8qbAzSeBh2CGX"
-SEARCH_INDEX_NAME = "multimodal-rag-1751364945777"
+SEARCH_INDEX_NAME = "captionindex"
 
 # Azure Blob Storage
 BLOB_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=vijayaistorage;AccountKey=hIZGQYe02nk9dOwfbU6iLdAV8Jq7WqJ/eyXohtcuc6036GhKEW5qwoQKOSFRY6FsyobWDjE+fCtR+AStgKVSzg==;EndpointSuffix=core.windows.net"
