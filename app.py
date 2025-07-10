@@ -180,7 +180,7 @@ async def search_image_post(query: str = Form(...)):
 
     for r in results:
         parsed_url = urlparse(r.get("image_url"))
-        path_parts = parsed_url.path.lstrip('/').split('/'
+        path_parts = parsed_url.path.lstrip('/').split('/')
         blob_name = '/'.join(path_parts[1:])
         break
 
